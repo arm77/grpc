@@ -20,16 +20,28 @@ import grpc
 import helloworld_pb2
 import helloworld_pb2_grpc
 
+import atexit
+g_stub = None
+g_channel = None
+def exit_handler():
+    global g_stub, g_channel
+    if g_stub is not None:
+        del g_stub
+    if g_channel is not None:
+        del g_channel
 
 def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel('localhost:50051') as channel:
-        stub = helloworld_pb2_grpc.GreeterStub(channel)
-        response = stub.SayHello(helloworld_pb2.HelloRequest(name='you'))
-    print("Greeter client received: " + response.message)
+    #with grpc.insecure_channel('localhost:50051') as channel:
+        global g_stub, g_channel
+        g_channel = grpc.insecure_channel('localhost:50051')
+        g_stub = helloworld_pb2_grpc.GreeterStub(g_channel)
+        response = g_stub.SayHello(helloworld_pb2.HelloRequest(name='you'))
+        print("Greeter client received: " + response.message)
 
 
 if __name__ == '__main__':
+    atexit.register(exit_handler)
     run()
